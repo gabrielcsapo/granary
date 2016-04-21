@@ -1,0 +1,52 @@
+{
+  "name": "granary",
+  "version": "0.0.0",
+  "bin": {
+    "granary": "bin/granary"
+  },
+  "scripts": {
+    "test": "mocha test/*.js --reporter=spec"
+  },
+  "description": "Dependency Bundling for NPM and Bower",
+  "homepage": "https://github.com/gabrielcsapo/granary",
+  "author": {
+    "name": "gabrielcsapo",
+    "email": "gabecsapo@gmail.com",
+    "url": "http://gabejc.com"
+  },
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/gabrielcsapo/granary.git"
+  },
+  "main": "./granary",
+  "dependencies": {},
+  "bugs": {
+    "url": "https://github.com/gabrielcsapo/granary/issues"
+  },
+  "devDependencies": {
+    "chai": "^3.5.0",
+    "grunt": "^1.0.1",
+    "grunt-cli": "^1.2.0",
+    "grunt-contrib-jshint": "^1.0.0",
+    "grunt-jscs": "^2.8.0",
+    "istanbul": "^0.4.3",
+    "mocha": "^2.4.5",
+    "rimraf": "^2.5.2"
+  },
+  "keywords": [
+    "granary",
+    "registry",
+    "npm",
+    "bundle",
+    "dependency",
+    "offline",
+    "package",
+    "zip",
+    "components",
+    "extract",
+    "modules",
+    "node_modules",
+    "bower"
+  ]
+}

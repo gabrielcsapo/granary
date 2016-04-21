@@ -1,0 +1,110 @@
+#!/usr/bin/env node
+var fs = require('fs');
+var path = require('path');
+
+var optlist = {
+  help: {
+    short: 'h',
+    info: 'Display help.',
+    type: Boolean
+  },
+  url: {
+    short: 'u',
+    info: 'Granary Server URL. Example: "-u=http://example.com"',
+    type: require('url')
+  },
+  production: {
+    info: 'Download production required bundle only.',
+    type: Boolean
+  },
+  directory: {
+    info: 'Optional path to project.',
+    type: String
+  },
+  verbose: {
+    short: 'v',
+    info: 'Verbose mode. A lot more information output.',
+    type: Boolean
+  },
+  version: {
+    short: 'V',
+    info: 'Display granary CLI version.',
+    type: Boolean
+  },
+  force: {
+    short: 'f',
+    info: 'A way to force create a bundle. Requires password and create commands.',
+    type: Boolean
+  },
+  silent: {
+    info: 'No output.',
+    type: Boolean
+  }
+};
+
+var actions = {
+  get: {
+    info: 'Default action. Download the bundle for the current project. Setting `get` is optional.',
+    usage: '`granary`'
+  },
+  create: {
+    info: 'Create a bundle for the current project directory on a remote server. Requires password.',
+    usage: '`granary create`'
+  },
+  track: {
+    info: 'Track a remote repository for dependency changes.' +
+          '\n Granary will automatically create bundles. `master` branch by default.',
+    usage: '`granary track https://github.com:user/repo.git [-b branch]`'
+  }
+};
+
+var availableActions = Object.keys(actions);
+
+// Parse `optlist` into a form that nopt can handle.
+var aliases = {};
+var known = {};
+
+Object.keys(optlist).forEach(function (key) {
+  var short = optlist[key].short;
+  if (short) {
+    aliases[short] = '--' + key;
+  }
+  known[key] = optlist[key].type;
+});
+
+// everything is optional.
+// knownOpts and shorthands default to {}
+// arg list defaults to process.argv
+// slice defaults to 2
+var options = require('../modules/nopt/nopt')(known, aliases, process.argv, 2);
+var action = options.argv.remain;
+delete options.argv;
+
+// if have an action set, check if it is available
+if (action.length > 0) {
+  if (availableActions.indexOf(action[0]) > -1) {
+    options.action = action[0];
+    options.actionParams = action.slice(1);
+  } else {
+    throw new Error('Invalid Action. Available Actions: ' + availableActions);
+  }
+}
+
+if (options.help) {
+  // display help
+  console.log('Granary Actions:');
+  Object.keys(actions).forEach(function (key) {
+    var i = actions[key];
+    console.log('\n' + key + '\n', i.info, '\n Usage: ' + i.usage);
+  });
+  console.log('\nGranary Flags:');
+  Object.keys(optlist).forEach(function (key) {
+    var i = optlist[key];
+    console.log('\n--' + key + '\n', i.short ? '-' + i.short : '', i.info);
+  });
+}else if (options.version) {
+  console.log(JSON.parse(fs.readFileSync(path.join(__dirname, '..', 'package.json'))).version);
+} else {
+  var granary = require('../granary')();
+  granary.init(options);
+}
