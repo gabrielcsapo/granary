@@ -5,7 +5,7 @@
     "granary": "bin/granary"
   },
   "scripts": {
-    "test": "mocha test/index.js --reporter=spec"
+    "test": "./node_modules/mocha/bin/mocha test/index.js --reporter=spec"
   },
   "description": "Dependency Bundling for NPM and Bower",
   "homepage": "https://github.com/gabrielcsapo/granary",
