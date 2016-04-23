@@ -33,8 +33,8 @@ describe('granary-server', function() {
     require('./create');
     require('./error_bower');
     require('./extract');
-    require('./track');
     require('./error');
+    // require('./track');
 });
 
 process.on('exit', function() {
