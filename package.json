@@ -5,7 +5,7 @@
     "granary": "bin/granary"
   },
   "scripts": {
-    "test": "mocha test/*.js --reporter=spec"
+    "test": "mocha test/index.js --reporter=spec"
   },
   "description": "Dependency Bundling for NPM and Bower",
   "homepage": "https://github.com/gabrielcsapo/granary",
@@ -34,6 +34,7 @@
     "url": "https://github.com/gabrielcsapo/granary/issues"
   },
   "devDependencies": {
+    "granary-server": "git+https://git@github.com/gabrielcsapo/granary-server.git",
     "chai": "^3.5.0",
     "grunt": "^1.0.1",
     "grunt-cli": "^1.2.0",
