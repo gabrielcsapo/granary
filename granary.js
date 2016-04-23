@@ -30,9 +30,9 @@ module.exports = function () {
       production: startup.detectProduction(options),
       projectDir: options.directory || '.'
     };
+    // TODO: do not let this run without a project name
     var project = {
       name: 'noname',
-
       npm: {
         dependencies: {},
         devDependencies: {}
