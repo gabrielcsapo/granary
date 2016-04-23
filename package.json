@@ -22,6 +22,7 @@
   "main": "./granary",
   "dependencies": {
     "bluebird": "^3.3.5",
+    "nopt": "^3.0.6",
     "read": "^1.0.7",
     "request": "^2.72.0"
   },
