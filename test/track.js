@@ -33,12 +33,8 @@ describe('track', function () {
     this.timeout(200000);
     process.env.GRANARY_PASSWORD = 'testing';
     var cmd = executable + ' track https://github.com/gabrielcsapo/granary-sample -u http://localhost:8872';
-    console.log(cmd);
     exec(cmd,
       function (error, stdout, stderr) {
-        console.log(error);
-        console.log(stderr);
-        console.log(stdout);
         assert.notOk(stderr);
         assert.equal(stdout, 'Tracking successfully setup for: https://github.com/gabrielcsapo/granary-sample master\n');
         done();
