@@ -1,4 +1,4 @@
-var log = require('./modules/loglevel');
+var log = require('loglevel');
 
 module.exports = function () {
 
