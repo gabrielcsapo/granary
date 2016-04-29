@@ -54,7 +54,7 @@ module.exports = function () {
         extra.force = true;
       }
 
-      return password().then(function(password) {
+      return password.try().then(function(password) {
         extra.password = password;
         return startup.granaryRequest(url, project, extra, options);
       });
