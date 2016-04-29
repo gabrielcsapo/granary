@@ -45,7 +45,7 @@ describe('create', function () {
   });
 
   it('should work with a custom directory', function (done) {
-    this.timeout(30000);
+    this.timeout(300000);
     process.env.GRANARY_PASSWORD = 'testing';
     process.chdir(currentDir);
     var cmd = executable + ' create -u http://localhost:8872 --directory=' + __dirname + '/fixtures/project1';
@@ -92,7 +92,7 @@ describe('create', function () {
 
 
   it('should create a bundle and a bundle can be extracted', function (done) {
-    this.timeout(30000);
+    this.timeout(300000);
     process.env.GRANARY_PASSWORD = 'testing';
 
     exec(executable + ' create -u http://localhost:8872',
