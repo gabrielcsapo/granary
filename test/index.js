@@ -7,7 +7,7 @@ describe('granary-server', function() {
 
     before(function(done) {
         this.timeout(50000);
-        console.log(path.resolve('node_modules', 'granary-server'));
+        // run the npm start task in the granary-server directory
         cli = spawn('npm', ['run', 'start'], {
           cwd: path.resolve('node_modules', 'granary-server'),
           env: process.env

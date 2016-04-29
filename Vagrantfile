@@ -9,6 +9,5 @@ Vagrant.configure("2") do |config|
   config.vm.provider "virtualbox" do |v|
     v.memory = 2048
     v.customize ["setextradata", :id, "VBoxInternal2/SharedFoldersEnableSymlinksCreate/v-root", "1"]
-    config.vm.synced_folder "/usr/local/lib/node_modules/granary-server", "/vagrant/node_modules/granary-server", :owner => "www-data", :group => "www-data"
   end
 end
