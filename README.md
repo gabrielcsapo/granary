@@ -35,6 +35,6 @@ Run `granary -u http://localhost:8872`, you will now have the NPM and Bower modu
 
 ![](docs/overview.png)
 
-Freight supports:
+Granary supports:
 * with NPM: `npm-shrinkwrap.json`, NPM rebuild, production only bundles
 * with Bower: `.bowerrc`, Bower resolutions
