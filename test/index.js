@@ -25,16 +25,9 @@ describe('granary-server', function() {
         });
     })
 
-    after(function() {
-        cli.kill();
-    });
-
-    require('./basic');
+    require('./cli');
     require('./create');
-    require('./error_bower');
-    require('./extract');
-    require('./error');
-    // require('./track');
+
 });
 
 process.on('exit', function() {
