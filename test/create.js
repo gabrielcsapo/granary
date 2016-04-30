@@ -1,136 +1,275 @@
-/*global describe, it, beforeEach, afterEach*/
 var fs = require('fs');
 var rimraf = require('rimraf');
+var path = require('path');
 var exec = require('child_process').exec;
+var spawn = require('child_process').spawn;
 var assert = require('chai').assert;
 
-var executable = __dirname + '/../bin/granary';
+var executable = path.resolve(__dirname + '/../bin/granary');
 var currentDir = process.cwd();
 
-describe('create', function () {
-  var projectName = 'sample-project';
+describe('create', function() {
+    this.timeout(3000000);
+    
+    it('should ask for password, fail on wrong password', function(done) {
+        process.env.GRANARY_PASSWORD = 'wrong';
 
-  beforeEach(function (done) {
-    process.env.GRANARY_PASSWORD = null;
-    // go to the fixture project
-    process.chdir(__dirname + '/fixtures/project1');
-    // force project update
-    var pkg = JSON.parse(fs.readFileSync('package.json'));
-    // update project name
-    pkg.name = pkg.name + Date.now();
-    // write new project name
-    fs.writeFileSync('package.json', JSON.stringify(pkg, null, 2));
-    // clear node_modules for the sample project
-    rimraf('node_modules', done);
-  });
+        var child = spawn(executable, ['create', '-u=http://localhost:8872']);
 
-  afterEach(function () {
-    // force project update
-    var pkg = JSON.parse(fs.readFileSync('package.json'));
-    // set the old project name
-    pkg.name = projectName;
-    fs.writeFileSync('package.json', JSON.stringify(pkg, null, 2));
-    process.chdir(currentDir);
-  });
+        child.stderr.on('data', function(data) {
+            assert.equal(data.toString('utf8'), 'Wrong Granary Server password.\n');
+            child.kill('SIGINT');
+        });
 
-  it('should ask for password, fail on wrong password', function (done) {
-    this.timeout(15000);
+        child.on('exit', function(data) {
+            done();
+        });
 
-    exec('GRANARY_PASSWORD=wrong ' + executable + ' create -u http://localhost:8872',
-      function (error, stdout, stderr) {
-        assert.equal(stderr, 'Wrong Granary Server password.\n');
-        done();
-      });
+    });
 
-  });
+    it('should ask for password, fail on no password', function(done) {
+        var child = spawn(executable, ['create', '-u=http://localhost:8872']);
 
-  it('should work with a custom directory', function (done) {
-    this.timeout(300000);
-    process.env.GRANARY_PASSWORD = 'testing';
-    process.chdir(currentDir);
-    var cmd = executable + ' create -u http://localhost:8872 --directory=' + __dirname + '/fixtures/project1';
+        child.stdout.on("data", function(data) {
+            child.stdin.write('\n');
+            child.stdin.end();
+        });
 
-    exec(cmd,
-      function (error, stdout, stderr) {
-        process.chdir(__dirname + '/fixtures/project1');
-        assert.equal(stderr, '');
-        var out =
-          '************\n\n' +
-          'Bundle does not exist for this project.\n' +
-          'Granary Server will now generate a bundle.';
-        assert.equal(stdout.substring(0, 96), out);
+        child.stderr.on("data", function(data) {
+            assert.equal(data, 'Wrong Granary Server password.\n');
+            child.kill('SIGINT');
+        });
 
-        var bundleReady = function() {
-          // extract bundle
-          exec(executable + ' -u http://localhost:8872',
-            function (error, stdout, stderr) {
-              assert.equal(stderr, '');
+        child.on('exit', function(data) {
+            done();
+        });
 
-              fs.exists('node_modules/inherits/package.json', function (exists) {
-                if (! exists) {
-                  // didn't get the bunle yet, check again
-                  setTimeout(function () {
-                    bundleReady();
-                  }, 1000);
-                } else {
-                  assert.ok(exists);
-                  assert.ok(fs.existsSync('node_modules/rimraf/package.json'));
-                  assert.notOk(fs.existsSync('bower_components'));
-                  assert.notOk(fs.existsSync('bower.json'));
-                  assert.notOk(fs.existsSync('.bowerrc'));
-                  assert.notOk(fs.existsSync('node_modules/mocha'));
-                  done();
+    });
+
+    it('should work with npm', function(done) {
+        process.env.GRANARY_PASSWORD = 'testing';
+
+        var directory = path.resolve(__dirname + '/fixtures/npm');
+        var cmd = executable + ' create -u=http://localhost:8872 --directory=' + directory
+
+        exec(cmd, function(error, stdout, stderr) {
+            process.chdir(directory);
+            assert.equal(stderr, '');
+            var output =
+                '************\n\n' +
+                'Granary Server will now generate a bundle.\n' +
+                'Monitor your Granary at http://localhost:8872/granary/active\n\n' +
+                '************\n';
+            assert.equal(stdout, output);
+
+            var stdout = [];
+            var finished = false;
+
+            var check = function() {
+                if(stdout.indexOf('Extracting bundle...\n') > -1) {
+                    console.log('check');
+                    // Wait for bundle to extract completely
+                    setTimeout(function() {
+                        assert.ok(fs.existsSync(path.resolve(directory, 'node_modules/rimraf/package.json')));
+                        assert.ok(fs.existsSync(path.resolve(directory, 'node_modules/inherits/package.json')));
+                        assert.notOk(fs.existsSync(path.resolve(directory,'bower_components')));
+                        assert.notOk(fs.existsSync(path.resolve(directory,'bower.json')));
+                        assert.notOk(fs.existsSync(path.resolve(directory,'.bowerrc')));
+                        assert.notOk(fs.existsSync(path.resolve(directory,'node_modules/mocha')));
+                        console.log(stdout);
+                        done();
+                    }, 1000);
                 }
-              });
+            }
+
+            var run = function() {
+                var child = spawn(executable, ['-u=http://localhost:8872']);
+
+                child.stdout.on("data", function(data) {
+                    if(data.indexOf('Bundle does not exist for this project') > -1) {
+                        child.kill('SIGINT');
+                    } else {
+                        if(stdout.indexOf(data.toString('utf8')) == -1) {
+                            stdout.push(data.toString('utf8'));
+                            if(data.indexOf('Granary is done in') > -1) {
+                                finished = true;
+                                child.kill('SIGINT');
+                            }
+                        }
+                    }
+                });
+
+                child.stderr.on("data", function(data) {
+                    assert.equal(stderr, '');
+                });
+
+                child.on('exit', function(data) {
+                    if(!finished) {
+                        setTimeout(function() {
+                            run();
+                        }, 1000);
+                    } else {
+                        check();
+                    }
+                });
+            };
+
+            rimraf(path.resolve(directory, 'node_modules'), function() {
+                run();
             });
-        };
 
-        bundleReady();
+        });
+    });
 
-      });
-  });
+    it('should work with bower', function(done) {
+        process.env.GRANARY_PASSWORD = 'testing';
 
+        var directory = path.resolve(__dirname + '/fixtures/bower');
+        var cmd = executable + ' create -u=http://localhost:8872 --directory=' + directory
 
-  it('should create a bundle and a bundle can be extracted', function (done) {
-    this.timeout(300000);
-    process.env.GRANARY_PASSWORD = 'testing';
+        exec(cmd, function(error, stdout, stderr) {
+            process.chdir(directory);
+            assert.equal(stderr, '');
+            var output =
+                '************\n\n' +
+                'Granary Server will now generate a bundle.\n' +
+                'Monitor your Granary at http://localhost:8872/granary/active\n\n' +
+                '************\n';
+            assert.equal(stdout, output);
 
-    exec(executable + ' create -u http://localhost:8872',
-      function (error, stdout, stderr) {
-        assert.equal(stderr, '');
-        var out =
-          '************\n\n' +
-          'Bundle does not exist for this project.\n' +
-          'Granary Server will now generate a bundle.';
-        assert.equal(stdout.substring(0, 96), out);
+            var stdout = [];
+            var finished = false;
 
-        var bundleReady = function() {
-          // extract bundle
-          exec(executable + ' -u http://localhost:8872',
-            function (error, stdout, stderr) {
-              assert.equal(stderr, '');
-
-              fs.exists('node_modules/inherits/package.json', function (exists) {
-                if (! exists) {
-                  // didn't get the bunle yet, check again
-                  setTimeout(function () {
-                    bundleReady();
-                  }, 1000);
-                } else {
-                  assert.ok(exists);
-                  assert.ok(fs.existsSync('node_modules/rimraf/package.json'));
-                  assert.notOk(fs.existsSync('bower_components'));
-                  assert.notOk(fs.existsSync('bower.json'));
-                  assert.notOk(fs.existsSync('.bowerrc'));
-                  done();
+            var check = function() {
+                if(stdout.indexOf('Extracting bundle...\n') > -1) {
+                    console.log('check');
+                    // Wait for bundle to extract completely
+                    setTimeout(function() {
+                        assert.ok(fs.existsSync(path.resolve(directory, 'app/bower_components')));
+                        assert.ok(fs.existsSync(path.resolve(directory, 'app/bower_components/moment/moment.js'), 'moment should exist'));
+                        assert.ok(fs.existsSync(path.resolve(directory, 'bower.json')));
+                        console.log(stdout);
+                        done();
+                    }, 1000);
                 }
-              });
+            }
+
+            var run = function() {
+                var child = spawn(executable, ['-u=http://localhost:8872']);
+
+                child.stdout.on("data", function(data) {
+                    if(data.indexOf('Bundle does not exist for this project') > -1) {
+                        child.kill('SIGINT');
+                    } else {
+                        if(stdout.indexOf(data.toString('utf8')) == -1) {
+                            stdout.push(data.toString('utf8'));
+                            if(data.indexOf('Granary is done in') > -1) {
+                                finished = true;
+                                child.kill('SIGINT');
+                            }
+                        }
+                    }
+                });
+
+                child.stderr.on("data", function(data) {
+                    assert.equal(stderr, '');
+                });
+
+                child.on('exit', function(data) {
+                    if(!finished) {
+                        setTimeout(function() {
+                            run();
+                        }, 1000);
+                    } else {
+                        check();
+                    }
+                });
+            };
+
+            rimraf(path.resolve(directory, 'app/bower_components'), function() {
+                run();
             });
-        };
 
-        bundleReady();
+        });
+    });
 
-      });
-  });
+    it('should work with npm+bower', function(done) {
+        process.env.GRANARY_PASSWORD = 'testing';
+
+        var directory = path.resolve(__dirname + '/fixtures/npm+bower');
+        var cmd = executable + ' create -u=http://localhost:8872 --directory=' + directory
+
+        exec(cmd, function(error, stdout, stderr) {
+            process.chdir(directory);
+            assert.equal(stderr, '');
+            var output =
+                '************\n\n' +
+                'Granary Server will now generate a bundle.\n' +
+                'Monitor your Granary at http://localhost:8872/granary/active\n\n' +
+                '************\n';
+            assert.equal(stdout, output);
+
+            var stdout = [];
+            var finished = false;
+
+            var check = function() {
+                if(stdout.indexOf('Extracting bundle...\n') > -1) {
+                    console.log('check');
+                    console.log(stdout);
+                    // Wait for bundle to extract completely
+                    setTimeout(function() {
+                        console.log(stdout);
+                        assert.ok(fs.existsSync(path.resolve(directory, 'app/bower_components')));
+                        assert.ok(fs.existsSync(path.resolve(directory, 'app/bower_components/moment/moment.js'), 'moment should exist'));
+                        assert.ok(fs.existsSync(path.resolve(directory, 'bower.json')));
+                        assert.ok(fs.existsSync(path.resolve(directory, 'node_modules')));
+                        assert.ok(fs.existsSync(path.resolve(directory, 'node_modules/rimraf/package.json')));
+                        assert.ok(fs.existsSync(path.resolve(directory, 'node_modules/inherits/package.json')));
+                        console.log(stdout);
+                        done();
+                    }, 3000);
+                }
+            }
+
+            var run = function() {
+                var child = spawn(executable, ['-u=http://localhost:8872']);
+
+                child.stdout.on("data", function(data) {
+                    if(data.indexOf('Bundle does not exist for this project') > -1) {
+                        child.kill('SIGINT');
+                    } else {
+                        if(stdout.indexOf(data.toString('utf8')) == -1) {
+                            stdout.push(data.toString('utf8'));
+                            if(data.indexOf('Granary is done in') > -1) {
+                                finished = true;
+                                child.kill('SIGINT');
+                            }
+                        }
+                    }
+                });
+
+                child.stderr.on("data", function(data) {
+                    assert.equal(stderr, '');
+                });
+
+                child.on('exit', function(data) {
+                    if(!finished) {
+                        setTimeout(function() {
+                            run();
+                        }, 1000);
+                    } else {
+                        check();
+                    }
+                });
+            };
+
+            rimraf(path.resolve(directory, 'app'), function() {
+                rimraf(path.resolve(directory, 'node_modules'), function() {
+                    run();
+                });
+            });
+
+        });
+    });
 
 });

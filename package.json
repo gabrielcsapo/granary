@@ -5,7 +5,7 @@
     "granary": "bin/granary"
   },
   "scripts": {
-    "test": "redis-cli flushall; rm -rf node_modules/granary-server/storage/**;./node_modules/mocha/bin/mocha test/index.js --reporter=spec"
+      "test": "redis-cli flushall; rm -rf node_modules/granary-server/storage/**;./node_modules/mocha/bin/mocha test/index.js --reporter=spec"
   },
   "description": "Dependency Bundling for NPM and Bower",
   "homepage": "https://github.com/gabrielcsapo/granary",
