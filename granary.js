@@ -67,8 +67,7 @@ module.exports = function () {
           extra.password = password;
           return track.request(url, project, extra, options);
         })
-        .then(
-          function (result) {
+        .then(function () {
             log.debug('Granary request complete.');
             if (! options.server) {
               process.exit(0);

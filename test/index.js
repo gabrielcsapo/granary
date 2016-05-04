@@ -1,4 +1,5 @@
 var path = require('path');
+var fs = require('fs');
 var spawn = require('child_process').spawn;
 
 var cli = '';
@@ -14,13 +15,14 @@ describe('granary-server', function() {
         });
         cli.stdout.on('data', function(data) {
             var message = data.toString('utf8');
-            console.log(message);
-            if(message.indexOf('INFO freight-server: Granary Server is now running port 8872') > -1) {
+            if(message.indexOf('INFO granary-server: Granary Server is now running port 8872') > -1) {
+                var config = JSON.parse(fs.readFileSync(path.resolve('node_modules', 'granary-server', 'config', 'dev.json')));
+                process.CORRECT_PASSWORD = config.password;
                 done();
             }
         });
         cli.stderr.on('data', function (data) {
-            console.log('err data: ' + data);
+            console.log('err data: ' + data); // eslint-disable-line no-console
             cli.kill();
         });
     })
