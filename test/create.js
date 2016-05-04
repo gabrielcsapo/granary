@@ -257,4 +257,94 @@ describe('create', function() {
         });
     });
 
+    it('should fail a blank .granaryrc file', function(done) {
+        process.env.GRANARY_PASSWORD = process.CORRECT_PASSWORD;
+
+        var directory = path.resolve(__dirname + '/fixtures/granaryrc');
+
+        var child = spawn(executable, ['create'], {
+            cwd: directory
+        });
+
+        child.stderr.on('data', function(data) {
+            assert.equal(data.toString('utf8'), 'NOTE: Set server URL with "--url=http://example.com" or GRANARY_URL=http://example.com\n');
+            child.kill('SIGINT');
+        });
+
+        child.on('exit', function() {
+            done();
+        });
+
+    });
+
+    it('should work with npm with a .granaryrc file', function(done) {
+        process.env.GRANARY_PASSWORD = process.CORRECT_PASSWORD;
+
+        var directory = path.resolve(__dirname + '/fixtures/npm+granaryrc');
+        var cmd = executable + ' create --directory=' + directory
+
+        exec(cmd, function(error, _stdout, _stderr) {
+            process.chdir(directory);
+            var output =
+                '************\n\n' +
+                'Granary Server will now generate a bundle.\n' +
+                'Monitor your Granary at http://localhost:8872/granary/active\n\n' +
+                '************\n';
+            assert.equal(_stderr, '');
+            assert.equal(_stdout, output);
+
+            var stdout = [];
+            var finished = false;
+
+            var check = function() {
+                // Wait for bundle to extract completely
+                setTimeout(function() {
+                    assert.ok(fs.existsSync(path.resolve(directory, 'node_modules')));
+                    assert.ok(fs.existsSync(path.resolve(directory, 'node_modules/rimraf/package.json')));
+                    assert.ok(fs.existsSync(path.resolve(directory, 'node_modules/inherits/package.json')));
+                    done();
+                }, 3000);
+            }
+
+            var run = function() {
+                var child = spawn(executable, ['-u=http://localhost:8872']);
+
+                child.stdout.on("data", function(data) {
+                    if(data.indexOf('Bundle does not exist for this project') > -1) {
+                        child.kill('SIGINT');
+                    } else {
+                        if(stdout.indexOf(data.toString('utf8')) == -1) {
+                            stdout.push(data.toString('utf8'));
+                            if(data.indexOf('Granary is done in') > -1) {
+                                finished = true;
+                                child.kill('SIGINT');
+                            }
+                        }
+                    }
+                });
+
+                child.stderr.on("data", function(data) {
+                    assert.equal(data, '');
+                });
+
+                child.on('exit', function() {
+                    if(!finished) {
+                        setTimeout(function() {
+                            run();
+                        }, 1000);
+                    } else {
+                        check();
+                    }
+                });
+            };
+
+            rimraf(path.resolve(directory, 'app'), function() {
+                rimraf(path.resolve(directory, 'node_modules'), function() {
+                    run();
+                });
+            });
+
+        });
+    });
+
 });
