@@ -5,12 +5,11 @@ var exec = require('child_process').exec;
 var spawn = require('child_process').spawn;
 var assert = require('chai').assert;
 
-var executable = path.resolve(__dirname + '/../bin/granary');
-var currentDir = process.cwd();
+var executable = path.resolve(require.resolve('granary'), '..', 'bin', 'granary');
 
 describe('create', function() {
     this.timeout(3000000);
-    
+
     it('should ask for password, fail on wrong password', function(done) {
         process.env.GRANARY_PASSWORD = 'wrong';
 
@@ -21,7 +20,7 @@ describe('create', function() {
             child.kill('SIGINT');
         });
 
-        child.on('exit', function(data) {
+        child.on('exit', function() {
             done();
         });
 
@@ -30,7 +29,7 @@ describe('create', function() {
     it('should ask for password, fail on no password', function(done) {
         var child = spawn(executable, ['create', '-u=http://localhost:8872']);
 
-        child.stdout.on("data", function(data) {
+        child.stdout.on("data", function() {
             child.stdin.write('\n');
             child.stdin.end();
         });
@@ -40,46 +39,42 @@ describe('create', function() {
             child.kill('SIGINT');
         });
 
-        child.on('exit', function(data) {
+        child.on('exit', function() {
             done();
         });
 
     });
 
     it('should work with npm', function(done) {
-        process.env.GRANARY_PASSWORD = 'testing';
+        process.env.GRANARY_PASSWORD = process.CORRECT_PASSWORD;
 
         var directory = path.resolve(__dirname + '/fixtures/npm');
         var cmd = executable + ' create -u=http://localhost:8872 --directory=' + directory
 
-        exec(cmd, function(error, stdout, stderr) {
+        exec(cmd, function(error, _stdout, _stderr) {
             process.chdir(directory);
-            assert.equal(stderr, '');
             var output =
                 '************\n\n' +
                 'Granary Server will now generate a bundle.\n' +
                 'Monitor your Granary at http://localhost:8872/granary/active\n\n' +
                 '************\n';
-            assert.equal(stdout, output);
+            assert.equal(_stderr, '');
+            assert.equal(_stdout, output);
 
             var stdout = [];
             var finished = false;
 
             var check = function() {
-                if(stdout.indexOf('Extracting bundle...\n') > -1) {
-                    console.log('check');
-                    // Wait for bundle to extract completely
-                    setTimeout(function() {
-                        assert.ok(fs.existsSync(path.resolve(directory, 'node_modules/rimraf/package.json')));
-                        assert.ok(fs.existsSync(path.resolve(directory, 'node_modules/inherits/package.json')));
-                        assert.notOk(fs.existsSync(path.resolve(directory,'bower_components')));
-                        assert.notOk(fs.existsSync(path.resolve(directory,'bower.json')));
-                        assert.notOk(fs.existsSync(path.resolve(directory,'.bowerrc')));
-                        assert.notOk(fs.existsSync(path.resolve(directory,'node_modules/mocha')));
-                        console.log(stdout);
-                        done();
-                    }, 1000);
-                }
+                // Wait for bundle to extract completely
+                setTimeout(function() {
+                    assert.ok(fs.existsSync(path.resolve(directory, 'node_modules/rimraf/package.json')));
+                    assert.ok(fs.existsSync(path.resolve(directory, 'node_modules/inherits/package.json')));
+                    assert.notOk(fs.existsSync(path.resolve(directory,'bower_components')));
+                    assert.notOk(fs.existsSync(path.resolve(directory,'bower.json')));
+                    assert.notOk(fs.existsSync(path.resolve(directory,'.bowerrc')));
+                    assert.notOk(fs.existsSync(path.resolve(directory,'node_modules/mocha')));
+                    done();
+                }, 1000);
             }
 
             var run = function() {
@@ -100,10 +95,10 @@ describe('create', function() {
                 });
 
                 child.stderr.on("data", function(data) {
-                    assert.equal(stderr, '');
+                    assert.equal(data, '');
                 });
 
-                child.on('exit', function(data) {
+                child.on('exit', function() {
                     if(!finished) {
                         setTimeout(function() {
                             run();
@@ -122,36 +117,32 @@ describe('create', function() {
     });
 
     it('should work with bower', function(done) {
-        process.env.GRANARY_PASSWORD = 'testing';
+        process.env.GRANARY_PASSWORD = process.CORRECT_PASSWORD;
 
         var directory = path.resolve(__dirname + '/fixtures/bower');
         var cmd = executable + ' create -u=http://localhost:8872 --directory=' + directory
 
-        exec(cmd, function(error, stdout, stderr) {
+        exec(cmd, function(error, _stdout, _stderr) {
             process.chdir(directory);
-            assert.equal(stderr, '');
             var output =
                 '************\n\n' +
                 'Granary Server will now generate a bundle.\n' +
                 'Monitor your Granary at http://localhost:8872/granary/active\n\n' +
                 '************\n';
-            assert.equal(stdout, output);
+            assert.equal(_stderr, '');
+            assert.equal(_stdout, output);
 
             var stdout = [];
             var finished = false;
 
             var check = function() {
-                if(stdout.indexOf('Extracting bundle...\n') > -1) {
-                    console.log('check');
-                    // Wait for bundle to extract completely
-                    setTimeout(function() {
-                        assert.ok(fs.existsSync(path.resolve(directory, 'app/bower_components')));
-                        assert.ok(fs.existsSync(path.resolve(directory, 'app/bower_components/moment/moment.js'), 'moment should exist'));
-                        assert.ok(fs.existsSync(path.resolve(directory, 'bower.json')));
-                        console.log(stdout);
-                        done();
-                    }, 1000);
-                }
+                // Wait for bundle to extract completely
+                setTimeout(function() {
+                    assert.ok(fs.existsSync(path.resolve(directory, 'app/bower_components')));
+                    assert.ok(fs.existsSync(path.resolve(directory, 'app/bower_components/moment/moment.js'), 'moment should exist'));
+                    assert.ok(fs.existsSync(path.resolve(directory, 'bower.json')));
+                    done();
+                }, 2000);
             }
 
             var run = function() {
@@ -172,10 +163,10 @@ describe('create', function() {
                 });
 
                 child.stderr.on("data", function(data) {
-                    assert.equal(stderr, '');
+                    assert.equal(data, '');
                 });
 
-                child.on('exit', function(data) {
+                child.on('exit', function() {
                     if(!finished) {
                         setTimeout(function() {
                             run();
@@ -194,41 +185,35 @@ describe('create', function() {
     });
 
     it('should work with npm+bower', function(done) {
-        process.env.GRANARY_PASSWORD = 'testing';
+        process.env.GRANARY_PASSWORD = process.CORRECT_PASSWORD;
 
         var directory = path.resolve(__dirname + '/fixtures/npm+bower');
         var cmd = executable + ' create -u=http://localhost:8872 --directory=' + directory
 
-        exec(cmd, function(error, stdout, stderr) {
+        exec(cmd, function(error, _stdout, _stderr) {
             process.chdir(directory);
-            assert.equal(stderr, '');
             var output =
                 '************\n\n' +
                 'Granary Server will now generate a bundle.\n' +
                 'Monitor your Granary at http://localhost:8872/granary/active\n\n' +
                 '************\n';
-            assert.equal(stdout, output);
+            assert.equal(_stderr, '');
+            assert.equal(_stdout, output);
 
             var stdout = [];
             var finished = false;
 
             var check = function() {
-                if(stdout.indexOf('Extracting bundle...\n') > -1) {
-                    console.log('check');
-                    console.log(stdout);
-                    // Wait for bundle to extract completely
-                    setTimeout(function() {
-                        console.log(stdout);
-                        assert.ok(fs.existsSync(path.resolve(directory, 'app/bower_components')));
-                        assert.ok(fs.existsSync(path.resolve(directory, 'app/bower_components/moment/moment.js'), 'moment should exist'));
-                        assert.ok(fs.existsSync(path.resolve(directory, 'bower.json')));
-                        assert.ok(fs.existsSync(path.resolve(directory, 'node_modules')));
-                        assert.ok(fs.existsSync(path.resolve(directory, 'node_modules/rimraf/package.json')));
-                        assert.ok(fs.existsSync(path.resolve(directory, 'node_modules/inherits/package.json')));
-                        console.log(stdout);
-                        done();
-                    }, 3000);
-                }
+                // Wait for bundle to extract completely
+                setTimeout(function() {
+                    assert.ok(fs.existsSync(path.resolve(directory, 'app/bower_components')));
+                    assert.ok(fs.existsSync(path.resolve(directory, 'app/bower_components/moment/moment.js'), 'moment should exist'));
+                    assert.ok(fs.existsSync(path.resolve(directory, 'bower.json')));
+                    assert.ok(fs.existsSync(path.resolve(directory, 'node_modules')));
+                    assert.ok(fs.existsSync(path.resolve(directory, 'node_modules/rimraf/package.json')));
+                    assert.ok(fs.existsSync(path.resolve(directory, 'node_modules/inherits/package.json')));
+                    done();
+                }, 3000);
             }
 
             var run = function() {
@@ -249,10 +234,10 @@ describe('create', function() {
                 });
 
                 child.stderr.on("data", function(data) {
-                    assert.equal(stderr, '');
+                    assert.equal(data, '');
                 });
 
-                child.on('exit', function(data) {
+                child.on('exit', function() {
                     if(!finished) {
                         setTimeout(function() {
                             run();

@@ -5,7 +5,7 @@
     "granary": "bin/granary"
   },
   "scripts": {
-      "test": "redis-cli flushall; rm -rf node_modules/granary-server/storage/**;./node_modules/mocha/bin/mocha test/index.js --reporter=spec"
+    "test": "redis-cli flushall; rm -rf node_modules/granary-server/storage/**;./node_modules/eslint/bin/eslint.js .;./node_modules/mocha/bin/mocha test/index.js --reporter=spec"
   },
   "description": "Dependency Bundling for NPM and Bower",
   "homepage": "https://github.com/gabrielcsapo/granary",
@@ -22,6 +22,7 @@
   "main": "./granary",
   "dependencies": {
     "bluebird": "^3.3.5",
+    "eslint": "^2.9.0",
     "file-size": "^1.0.0",
     "leveldown": "^1.4.5",
     "levelup": "^1.3.1",
