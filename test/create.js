@@ -7,6 +7,8 @@ var assert = require('chai').assert;
 
 var executable = path.resolve(require.resolve('granary'), '..', 'bin', 'granary');
 
+// TODO: refactor boilerplate code?
+
 describe('create', function() {
     this.timeout(3000000);
 
@@ -95,7 +97,7 @@ describe('create', function() {
                 });
 
                 child.stderr.on("data", function(data) {
-                    assert.equal(data, '');
+                    assert.equal(data.toString('utf8'), '');
                 });
 
                 child.on('exit', function() {
@@ -163,7 +165,7 @@ describe('create', function() {
                 });
 
                 child.stderr.on("data", function(data) {
-                    assert.equal(data, '');
+                    assert.equal(data.toString('utf8'), '');
                 });
 
                 child.on('exit', function() {
@@ -177,7 +179,7 @@ describe('create', function() {
                 });
             };
 
-            rimraf(path.resolve(directory, 'app/bower_components'), function() {
+            rimraf(path.resolve(directory, 'app'), function() {
                 run();
             });
 
@@ -234,7 +236,7 @@ describe('create', function() {
                 });
 
                 child.stderr.on("data", function(data) {
-                    assert.equal(data, '');
+                    assert.equal(data.toString('utf8'), '');
                 });
 
                 child.on('exit', function() {
@@ -262,16 +264,14 @@ describe('create', function() {
 
         var directory = path.resolve(__dirname + '/fixtures/granaryrc');
 
-        var child = spawn(executable, ['create'], {
-            cwd: directory
-        });
+        var cmd = executable + ' create --directory=' + directory
 
-        child.stderr.on('data', function(data) {
-            assert.equal(data.toString('utf8'), 'NOTE: Set server URL with "--url=http://example.com" or GRANARY_URL=http://example.com\n');
-            child.kill('SIGINT');
-        });
-
-        child.on('exit', function() {
+        exec(cmd, {
+          cwd: directory
+        }, function(error, stdout, stderr) {
+            process.chdir(directory);
+            assert.equal(stdout, '');
+            assert.ok(stderr.toString('utf8').indexOf('NOTE: Set server URL with "--url=http://example.com" or GRANARY_URL=http://example.com\n') > -1);
             done();
         });
 
@@ -283,7 +283,9 @@ describe('create', function() {
         var directory = path.resolve(__dirname + '/fixtures/npm+granaryrc');
         var cmd = executable + ' create --directory=' + directory
 
-        exec(cmd, function(error, _stdout, _stderr) {
+        exec(cmd, {
+          cwd: directory
+        }, function(error, _stdout, _stderr) {
             process.chdir(directory);
             var output =
                 '************\n\n' +
@@ -324,7 +326,7 @@ describe('create', function() {
                 });
 
                 child.stderr.on("data", function(data) {
-                    assert.equal(data, '');
+                    assert.equal(data.toString('utf8'), '');
                 });
 
                 child.on('exit', function() {

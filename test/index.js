@@ -4,7 +4,7 @@ var spawn = require('child_process').spawn;
 
 var cli = '';
 
-describe('granary-server', function() {
+describe('granary', function() {
 
     before(function(done) {
         this.timeout(50000);
