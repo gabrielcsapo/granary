@@ -1,6 +1,7 @@
 {
   "name": "granary",
   "version": "0.1.0",
+  "main": "bin/granary",
   "bin": {
     "granary": "bin/granary"
   },
@@ -22,17 +23,14 @@
   "main": "./granary",
   "dependencies": {
     "bluebird": "^3.3.5",
-    "eslint": "^2.9.0",
+    "commander": "^2.9.0",
     "file-size": "^1.0.0",
-    "leveldown": "^1.4.5",
     "levelup": "^1.3.1",
-    "loglevel": "^1.4.0",
     "memdown": "^1.1.2",
-    "nopt": "^3.0.6",
-    "progress": "^1.1.8",
     "read": "^1.0.7",
     "request": "^2.72.0",
-    "tar-fs": "^1.12.0"
+    "tar-fs": "^1.12.0",
+    "winston": "^2.2.0"
   },
   "bugs": {
     "url": "https://github.com/gabrielcsapo/granary/issues"
@@ -40,11 +38,7 @@
   "devDependencies": {
     "granary-server": "git+https://git@github.com/gabrielcsapo/granary-server.git",
     "chai": "^3.5.0",
-    "grunt": "^1.0.1",
-    "grunt-cli": "^1.2.0",
-    "grunt-contrib-jshint": "^1.0.0",
-    "grunt-jscs": "^2.8.0",
-    "istanbul": "^0.4.3",
+    "eslint": "^2.9.0",
     "mocha": "^2.4.5",
     "rimraf": "^2.5.2"
   },
