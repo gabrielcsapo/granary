@@ -20,18 +20,18 @@ describe('granary', function() {
                 process.CORRECT_PASSWORD = config.password;
                 done();
             }
+            console.log(message); // eslint-disable-line no-console
         });
         cli.stderr.on('data', function (data) {
             console.log('err data: ' + data); // eslint-disable-line no-console
             cli.kill();
         });
-    })
+    });
 
-    require('./cli');
     require('./create');
 
-});
-
-process.on('exit', function() {
-    cli.kill();
+    after(function(done) {
+        cli.kill();
+        done()
+    });
 });

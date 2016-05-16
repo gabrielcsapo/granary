@@ -5,19 +5,17 @@ var exec = require('child_process').exec;
 var spawn = require('child_process').spawn;
 var assert = require('chai').assert;
 
-var executable = path.resolve(require.resolve('granary'), '..', 'bin', 'granary');
+var executable = path.resolve(__dirname, '..', 'bin', 'granary');
 
-// TODO: refactor boilerplate code?
-
-describe('create', function() {
+describe('rebuild', function() {
     this.timeout(3000000);
 
     it('should ask for password, fail on wrong password', function(done) {
         process.env.GRANARY_PASSWORD = 'wrong';
 
-        var child = spawn(executable, ['create', '-u=http://localhost:8872']);
+        var child = spawn(executable, [' rebuild', '-u', 'http://localhost:8872']);
 
-        child.stderr.on('data', function(data) {
+        child.stdout.on('data', function(data) {
             assert.equal(data.toString('utf8'), 'Wrong Granary Server password.\n');
             child.kill('SIGINT');
         });
@@ -29,7 +27,9 @@ describe('create', function() {
     });
 
     it('should ask for password, fail on no password', function(done) {
-        var child = spawn(executable, ['create', '-u=http://localhost:8872']);
+        this.timeout(3000000);
+
+        var child = spawn(executable, [' rebuild', '-u', 'http://localhost:8872']);
 
         child.stdout.on("data", function() {
             child.stdin.write('\n');
@@ -37,7 +37,7 @@ describe('create', function() {
         });
 
         child.stderr.on("data", function(data) {
-            assert.equal(data, 'Wrong Granary Server password.\n');
+            assert.isOk(data.toString('utf8').indexOf('Wrong Granary Server password.') > -1);
             child.kill('SIGINT');
         });
 
@@ -51,17 +51,13 @@ describe('create', function() {
         process.env.GRANARY_PASSWORD = process.CORRECT_PASSWORD;
 
         var directory = path.resolve(__dirname + '/fixtures/npm');
-        var cmd = executable + ' create -u=http://localhost:8872 --directory=' + directory
+        var cmd = executable + ' rebuild -u http://localhost:8872 --directory=' + directory
 
         exec(cmd, function(error, _stdout, _stderr) {
             process.chdir(directory);
-            var output =
-                '************\n\n' +
-                'Granary Server will now generate a bundle.\n' +
-                'Monitor your Granary at http://localhost:8872/granary/active\n\n' +
-                '************\n';
             assert.equal(_stderr, '');
-            assert.equal(_stdout, output);
+            assert.isOk(_stdout.indexOf('Granary Server will now generate a bundle.') > -1);
+            assert.isOk(_stdout.indexOf('Monitor your Granary at http://localhost:8872/granary/active') > -1);
 
             var stdout = [];
             var finished = false;
@@ -80,7 +76,7 @@ describe('create', function() {
             }
 
             var run = function() {
-                var child = spawn(executable, ['-u=http://localhost:8872']);
+                var child = spawn(executable, ['-u', 'http://localhost:8872']);
 
                 child.stdout.on("data", function(data) {
                     if(data.indexOf('Bundle does not exist for this project') > -1) {
@@ -122,17 +118,13 @@ describe('create', function() {
         process.env.GRANARY_PASSWORD = process.CORRECT_PASSWORD;
 
         var directory = path.resolve(__dirname + '/fixtures/bower');
-        var cmd = executable + ' create -u=http://localhost:8872 --directory=' + directory
+        var cmd = executable + ' rebuild -u http://localhost:8872 --directory=' + directory
 
         exec(cmd, function(error, _stdout, _stderr) {
             process.chdir(directory);
-            var output =
-                '************\n\n' +
-                'Granary Server will now generate a bundle.\n' +
-                'Monitor your Granary at http://localhost:8872/granary/active\n\n' +
-                '************\n';
             assert.equal(_stderr, '');
-            assert.equal(_stdout, output);
+            assert.isOk(_stdout.indexOf('Granary Server will now generate a bundle.') > -1);
+            assert.isOk(_stdout.indexOf('Monitor your Granary at http://localhost:8872/granary/active') > -1);
 
             var stdout = [];
             var finished = false;
@@ -148,7 +140,7 @@ describe('create', function() {
             }
 
             var run = function() {
-                var child = spawn(executable, ['-u=http://localhost:8872']);
+                var child = spawn(executable, ['-u', 'http://localhost:8872']);
 
                 child.stdout.on("data", function(data) {
                     if(data.indexOf('Bundle does not exist for this project') > -1) {
@@ -190,17 +182,13 @@ describe('create', function() {
         process.env.GRANARY_PASSWORD = process.CORRECT_PASSWORD;
 
         var directory = path.resolve(__dirname + '/fixtures/npm+bower');
-        var cmd = executable + ' create -u=http://localhost:8872 --directory=' + directory
+        var cmd = executable + ' rebuild -u http://localhost:8872 --directory=' + directory
 
         exec(cmd, function(error, _stdout, _stderr) {
             process.chdir(directory);
-            var output =
-                '************\n\n' +
-                'Granary Server will now generate a bundle.\n' +
-                'Monitor your Granary at http://localhost:8872/granary/active\n\n' +
-                '************\n';
             assert.equal(_stderr, '');
-            assert.equal(_stdout, output);
+            assert.isOk(_stdout.indexOf('Granary Server will now generate a bundle.') > -1);
+            assert.isOk(_stdout.indexOf('Monitor your Granary at http://localhost:8872/granary/active') > -1);
 
             var stdout = [];
             var finished = false;
@@ -208,6 +196,7 @@ describe('create', function() {
             var check = function() {
                 // Wait for bundle to extract completely
                 setTimeout(function() {
+                    console.log(stdout);
                     assert.ok(fs.existsSync(path.resolve(directory, 'app/bower_components')));
                     assert.ok(fs.existsSync(path.resolve(directory, 'app/bower_components/moment/moment.js'), 'moment should exist'));
                     assert.ok(fs.existsSync(path.resolve(directory, 'bower.json')));
@@ -219,7 +208,7 @@ describe('create', function() {
             }
 
             var run = function() {
-                var child = spawn(executable, ['-u=http://localhost:8872']);
+                var child = spawn(executable, ['-u', 'http://localhost:8872']);
 
                 child.stdout.on("data", function(data) {
                     if(data.indexOf('Bundle does not exist for this project') > -1) {
@@ -259,41 +248,19 @@ describe('create', function() {
         });
     });
 
-    it('should fail a blank .granaryrc file', function(done) {
-        process.env.GRANARY_PASSWORD = process.CORRECT_PASSWORD;
-
-        var directory = path.resolve(__dirname + '/fixtures/granaryrc');
-
-        var cmd = executable + ' create --directory=' + directory
-
-        exec(cmd, {
-          cwd: directory
-        }, function(error, stdout, stderr) {
-            process.chdir(directory);
-            assert.equal(stdout, '');
-            assert.ok(stderr.toString('utf8').indexOf('NOTE: Set server URL with "--url=http://example.com" or GRANARY_URL=http://example.com\n') > -1);
-            done();
-        });
-
-    });
-
     it('should work with npm with a .granaryrc file', function(done) {
         process.env.GRANARY_PASSWORD = process.CORRECT_PASSWORD;
 
         var directory = path.resolve(__dirname + '/fixtures/npm+granaryrc');
-        var cmd = executable + ' create --directory=' + directory
+        var cmd = executable + ' rebuild --directory=' + directory
 
         exec(cmd, {
           cwd: directory
         }, function(error, _stdout, _stderr) {
             process.chdir(directory);
-            var output =
-                '************\n\n' +
-                'Granary Server will now generate a bundle.\n' +
-                'Monitor your Granary at http://localhost:8872/granary/active\n\n' +
-                '************\n';
             assert.equal(_stderr, '');
-            assert.equal(_stdout, output);
+            assert.isOk(_stdout.indexOf('Granary Server will now generate a bundle.') > -1);
+            assert.isOk(_stdout.indexOf('Monitor your Granary at http://granaryjs.com/granary/active') > -1);
 
             var stdout = [];
             var finished = false;
@@ -309,7 +276,7 @@ describe('create', function() {
             }
 
             var run = function() {
-                var child = spawn(executable, ['-u=http://localhost:8872']);
+                var child = spawn(executable, ['-u', 'http://localhost:8872']);
 
                 child.stdout.on("data", function(data) {
                     if(data.indexOf('Bundle does not exist for this project') > -1) {
