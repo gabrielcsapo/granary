@@ -13,7 +13,7 @@ Options:
 
   -h, --help                   output usage information
   -V, --version                output the version number
-  -u, --url <url>              points to location of granary server (Example: "-u=http://granaryjs.com")
+  -u, --url <url>              points to location of granary server (Example: "-u http://granaryjs.com")
   -p, --production             downloads the production bundle
   -d, --directory <directory>  Optional path to project.
   -v, --verbose                Verbose mode, shows more information on the console.
