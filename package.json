@@ -39,11 +39,6 @@
     "granary-server": "git+https://git@github.com/gabrielcsapo/granary-server.git",
     "chai": "^3.5.0",
     "eslint": "^2.9.0",
-    "grunt": "^1.0.1",
-    "grunt-cli": "^1.2.0",
-    "grunt-contrib-jshint": "^1.0.0",
-    "grunt-jscs": "^2.8.0",
-    "istanbul": "^0.4.3",
     "mocha": "^2.4.5",
     "rimraf": "^2.5.2"
   },
