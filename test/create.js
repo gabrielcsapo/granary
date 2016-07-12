@@ -196,7 +196,6 @@ describe('rebuild', function() {
             var check = function() {
                 // Wait for bundle to extract completely
                 setTimeout(function() {
-                    console.log(stdout);
                     assert.ok(fs.existsSync(path.resolve(directory, 'app/bower_components')));
                     assert.ok(fs.existsSync(path.resolve(directory, 'app/bower_components/moment/moment.js'), 'moment should exist'));
                     assert.ok(fs.existsSync(path.resolve(directory, 'bower.json')));
