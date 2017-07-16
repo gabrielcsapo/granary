@@ -36,8 +36,8 @@
   },
   "devDependencies": {
     "granary-server": "git+https://git@github.com/gabrielcsapo/granary-server.git",
-    "chai": "^3.5.0",
-    "eslint": "^3.2.1",
+    "chai": "^4.1.0",
+    "eslint": "^4.2.0",
     "mocha": "^3.0.2",
     "rimraf": "^2.5.2"
   },
