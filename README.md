@@ -1,3 +1,5 @@
+> DEPRECATED: THIS WILL NO LONGER BE UNDER DEVELOPMENT
+
 # granary [![Build Status](https://travis-ci.org/gabrielcsapo/granary.svg?branch=master)](https://travis-ci.org/gabrielcsapo/granary) [![Dependency Status](https://david-dm.org/gabrielcsapo/granary.svg)](https://david-dm.org/gabrielcsapo/granary) [![devDependency Status](https://david-dm.org/gabrielcsapo/granary/dev-status.svg)](https://david-dm.org/gabrielcsapo/granary#info=devDependencies)
 
 # Install
